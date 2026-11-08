@@ -5,41 +5,15 @@ x-images:
   web: &web-image "ghcr.io/viridianlink/zayden-web:${IMAGE_TAG:-latest}"
 
 services:
-  # postgres:
-  #   image: postgres:18-bookworm
-  #   restart: unless-stopped
-  #   environment:
-  #     POSTGRES_USER: ${POSTGRES_USER:-zayden}
-  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env.docker}
-  #     POSTGRES_DB: ${POSTGRES_DB:-zayden}
-  #   volumes:
-  #     - pgdata:/var/lib/postgresql/data
-  #   # Postgres uses shared memory for parallel queries / large sorts.
-  #   shm_size: 256mb
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-zayden} -d ${POSTGRES_DB:-zayden}"]
-  #     interval: 5s
-  #     timeout: 5s
-  #     retries: 10
-  #   deploy:
-  #     resources:
-  #       limits:
-  #         memory: 1g
-  #       reservations:
-  #         memory: 256m
-
   bot:
     image: *bot-image
     restart: unless-stopped
-    # depends_on:
-    #   postgres:
-    #     condition: service_healthy
     environment:
       DATABASE_URL: ${DATABASE_URL}
       RUST_LOG: ${RUST_LOG:-info}
       # Check env.example for the other env vars
     volumes:
-      - ./bot/config.toml:/app/config.toml:ro
+      - ./bots/zayden/config.toml:/app/config.toml:ro
       - palworld_uploads:/app/palworld_uploads
       # - ./secrets/youtube-cookies.txt:/app/secrets/youtube-cookies.txt:ro
     mem_reservation: 1g
@@ -57,8 +31,7 @@ services:
     ports:
       - "3100:3000"
     volumes:
-      - ./bot/config.toml:/app/config.toml:ro
+      - ./bots/zayden/config.toml:/app/config.toml:ro
 
 volumes:
   palworld_uploads:
-  # pgdata:
