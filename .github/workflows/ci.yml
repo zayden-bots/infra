@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: compose and scripts
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Validate compose file
+        env:
+          DATABASE_URL: postgres://user:password@localhost:5432/zayden
+        run: docker compose config --quiet
+      - name: Check script syntax
+        run: |
+          for f in scripts/*.sh; do bash -n "$f"; done
+          shellcheck scripts/*.sh
+      - name: Check the dev patch template parses
+        run: python3 -c 'import sys, tomllib; tomllib.load(open(sys.argv[1], "rb"))' template/dev-patch.toml

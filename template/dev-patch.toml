@@ -1,0 +1,38 @@
+# managed by infra/scripts/dev-link.sh
+[patch."https://github.com/ViridianLink/schema"]
+schema = { path = "schema" }
+
+[patch."https://github.com/ViridianLink/platform"]
+bot-runtime = { path = "platform/bot-runtime" }
+zayden-app = { path = "platform/zayden-app" }
+zayden-core = { path = "platform/zayden-core" }
+zayden-graphics = { path = "platform/zayden-graphics" }
+
+[patch."https://github.com/ViridianLink/modules"]
+accounts = { path = "modules/crates/accounts" }
+ai = { path = "modules/crates/ai" }
+deadlock = { path = "modules/crates/deadlock" }
+destiny2 = { path = "modules/crates/destiny2" }
+family = { path = "modules/crates/family" }
+gambling = { path = "modules/crates/gambling" }
+gold-star = { path = "modules/crates/gold-star" }
+greetings = { path = "modules/crates/greetings" }
+honeypot = { path = "modules/crates/honeypot" }
+hosting = { path = "modules/crates/hosting" }
+jellyfin = { path = "modules/crates/jellyfin" }
+levels = { path = "modules/crates/levels" }
+lfg = { path = "modules/crates/lfg" }
+llamad2 = { path = "modules/crates/llamad2" }
+marathon = { path = "modules/crates/marathon" }
+misc = { path = "modules/crates/misc" }
+moderation = { path = "modules/crates/moderation" }
+music = { path = "modules/crates/music" }
+palworld = { path = "modules/crates/palworld" }
+patreon = { path = "modules/crates/patreon" }
+reaction-roles = { path = "modules/crates/reaction-roles" }
+suggestions = { path = "modules/crates/suggestions" }
+temp-voice = { path = "modules/crates/temp-voice" }
+ticket = { path = "modules/crates/ticket" }
+verify = { path = "modules/crates/verify" }
+watch = { path = "modules/crates/watch" }
+youtube = { path = "modules/crates/youtube" }

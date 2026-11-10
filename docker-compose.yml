@@ -13,7 +13,7 @@ services:
       RUST_LOG: ${RUST_LOG:-info}
       # Check env.example for the other env vars
     volumes:
-      - ./bots/zayden/config.toml:/app/config.toml:ro
+      - ./config/zayden.toml:/app/config.toml:ro
       - palworld_uploads:/app/palworld_uploads
       # - ./secrets/youtube-cookies.txt:/app/secrets/youtube-cookies.txt:ro
     mem_reservation: 1g
@@ -31,7 +31,7 @@ services:
     ports:
       - "3100:3000"
     volumes:
-      - ./bots/zayden/config.toml:/app/config.toml:ro
+      - ./config/zayden.toml:/app/config.toml:ro
 
 volumes:
   palworld_uploads:
