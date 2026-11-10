@@ -13,5 +13,10 @@ for repo in schema platform modules bots dashboard; do
 done
 
 for repo in bots dashboard; do
-  ln -sfn ../infra/config/zayden.toml "$PARENT/$repo/config.toml"
+  link="$PARENT/$repo/config.toml"
+  if [ -e "$link" ] && [ ! -L "$link" ]; then
+    echo "$repo: config.toml is a regular file, left alone" >&2
+    continue
+  fi
+  ln -sfn "../$(basename "$ROOT")/config/zayden.toml" "$link"
 done

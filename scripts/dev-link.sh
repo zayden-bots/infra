@@ -19,6 +19,16 @@ case "${1:-}" in
       echo "dev-link: foreign config at $TARGET" >&2
       exit 1
     fi
+    missing=0
+    while IFS= read -r path; do
+      if [ ! -d "$PARENT/$path" ]; then
+        echo "dev-link: missing checkout path $PARENT/$path" >&2
+        missing=1
+      fi
+    done < <(sed -n 's/.*path = "\([^"]*\)".*/\1/p' "$ROOT/template/dev-patch.toml")
+    if [ "$missing" -ne 0 ]; then
+      exit 1
+    fi
     mkdir -p "$PARENT/.cargo"
     cp "$ROOT/template/dev-patch.toml" "$TARGET"
     echo "dev-link: on"
