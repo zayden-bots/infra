@@ -1,14 +1,14 @@
 # managed by infra/scripts/dev-link.sh
-[patch."https://github.com/ViridianLink/schema"]
+[patch."https://github.com/zayden-bots/schema"]
 schema = { path = "schema" }
 
-[patch."https://github.com/ViridianLink/platform"]
+[patch."https://github.com/zayden-bots/platform"]
 bot-runtime = { path = "platform/bot-runtime" }
 zayden-app = { path = "platform/zayden-app" }
 zayden-core = { path = "platform/zayden-core" }
 zayden-graphics = { path = "platform/zayden-graphics" }
 
-[patch."https://github.com/ViridianLink/modules"]
+[patch."https://github.com/zayden-bots/modules"]
 accounts = { path = "modules/crates/accounts" }
 ai = { path = "modules/crates/ai" }
 deadlock = { path = "modules/crates/deadlock" }

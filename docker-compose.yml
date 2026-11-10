@@ -1,8 +1,8 @@
 name: zayden
 
 x-images:
-  bot: &bot-image "ghcr.io/viridianlink/zayden-bot:${IMAGE_TAG:-latest}"
-  web: &web-image "ghcr.io/viridianlink/zayden-web:${IMAGE_TAG:-latest}"
+  bot: &bot-image "ghcr.io/zayden-bots/zayden:${IMAGE_TAG:-latest}"
+  web: &web-image "ghcr.io/zayden-bots/dashboard:${IMAGE_TAG:-latest}"
 
 services:
   bot:
