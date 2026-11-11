@@ -2,6 +2,7 @@ name: zayden
 
 x-images:
   bot: &bot-image "ghcr.io/zayden-bots/zayden:${IMAGE_TAG:-latest}"
+  worker: &worker-image "ghcr.io/zayden-bots/worker:${IMAGE_TAG:-latest}"
   web: &web-image "ghcr.io/zayden-bots/dashboard:${IMAGE_TAG:-latest}"
 
 services:
@@ -21,6 +22,16 @@ services:
       resources:
         reservations:
           memory: 1g
+
+  worker:
+    image: *worker-image
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      RUST_LOG: ${RUST_LOG:-info}
+      # Check env.example for the other env vars
+    volumes:
+      - ./config/zayden.toml:/app/config.toml:ro
 
   web:
     image: *web-image

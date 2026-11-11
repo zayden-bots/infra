@@ -76,27 +76,29 @@ Compose reads `DATABASE_URL` (required), `RUST_LOG` (default `info`) and `IMAGE_
 
 ## Deploy
 
-`docker-compose.yml` runs two services from images pushed to GHCR by each repo's `images` CI job:
+`docker-compose.yml` runs three services from images pushed to GHCR by each repo's `images` CI job:
 
 | Service | Image | Notes |
 |---|---|---|
 | `bot` | `ghcr.io/zayden-bots/zayden:${IMAGE_TAG:-latest}` | 1 GiB memory reservation, `palworld_uploads` volume |
+| `worker` | `ghcr.io/zayden-bots/worker:${IMAGE_TAG:-latest}` | scheduled jobs and broadcasts; needs `CUSTOM_BOT_KEYS` |
 | `web` | `ghcr.io/zayden-bots/dashboard:${IMAGE_TAG:-latest}` | host port 3100 maps to container port 3000 |
 
 Deploy in this order:
 
-1. The Zayden bot service. It runs migrations on startup.
+1. The Zayden bot and the worker, together. Both run migrations on startup.
 
    ```sh
-   docker compose pull bot && docker compose up -d bot
+   docker compose pull bot worker && docker compose up -d bot worker
    ```
 
-2. LlamaBot, on its VPS. It runs the same bot binary with its own `DISCORD_TOKEN`, outside compose, and is deployed by hand. It also runs migrations on startup. Redeploy it whenever the bot binary or the migrations change.
-3. The dashboard.
+2. The dashboard.
 
    ```sh
    docker compose pull web && docker compose up -d web
    ```
+
+3. LlamaBot, on its VPS. It runs the same bot binary with its own `DISCORD_TOKEN`, outside compose, and is deployed by hand. It also runs migrations on startup. Redeploy it whenever the bot binary or the migrations change.
 
 Check the compose file without starting anything:
 
