@@ -1,20 +1,26 @@
 name: zayden
 
 x-images:
-  bot: &bot-image "ghcr.io/zayden-bots/zayden:${IMAGE_TAG:-latest}"
+  zayden: &zayden-image "ghcr.io/zayden-bots/zayden:${IMAGE_TAG:-latest}"
+  llama: &llama-image "ghcr.io/zayden-bots/llama:${IMAGE_TAG:-latest}"
+  maria: &maria-image "ghcr.io/zayden-bots/maria:${IMAGE_TAG:-latest}"
   worker: &worker-image "ghcr.io/zayden-bots/worker:${IMAGE_TAG:-latest}"
-  web: &web-image "ghcr.io/zayden-bots/dashboard:${IMAGE_TAG:-latest}"
+  dashboard: &dashboard-image "ghcr.io/zayden-bots/dashboard:${IMAGE_TAG:-latest}"
 
 services:
-  bot:
-    image: *bot-image
+  zayden:
+    image: *zayden-image
+    container_name: zayden
     restart: unless-stopped
+    env_file: [".env", "zayden.env"]
     environment:
-      DATABASE_URL: ${DATABASE_URL}
       RUST_LOG: ${RUST_LOG:-info}
-      # Check env.example for the other env vars
+      LOG_FORMAT: json
+    ports:
+      - "${METRICS_HOST:-127.0.0.1}:9100:9100"
     volumes:
       - ./config/zayden.toml:/app/config.toml:ro
+      # - ./config/radio.toml:/app/radio.toml:ro
       - palworld_uploads:/app/palworld_uploads
       # - ./secrets/youtube-cookies.txt:/app/secrets/youtube-cookies.txt:ro
     mem_reservation: 1g
@@ -23,24 +29,61 @@ services:
         reservations:
           memory: 1g
 
-  worker:
-    image: *worker-image
+  llamabot:
+    image: *llama-image
+    container_name: llamabot
     restart: unless-stopped
+    env_file: [".env", "llamabot.env"]
     environment:
-      DATABASE_URL: ${DATABASE_URL}
       RUST_LOG: ${RUST_LOG:-info}
-      # Check env.example for the other env vars
+      LOG_FORMAT: json
+    ports:
+      - "${METRICS_HOST:-127.0.0.1}:9102:9100"
+    volumes:
+      - ./config/zayden.toml:/app/config.toml:ro
+      # - ./config/radio.toml:/app/radio.toml:ro
+      - palworld_uploads:/app/palworld_uploads
+      # - ./secrets/youtube-cookies.txt:/app/secrets/youtube-cookies.txt:ro
+
+  maria:
+    profiles: [maria]
+    image: *maria-image
+    container_name: maria
+    restart: unless-stopped
+    env_file: [".env", "maria.env"]
+    environment:
+      RUST_LOG: ${RUST_LOG:-info}
+      LOG_FORMAT: json
+    ports:
+      - "${METRICS_HOST:-127.0.0.1}:9104:9100"
     volumes:
       - ./config/zayden.toml:/app/config.toml:ro
 
-  web:
-    image: *web-image
+  worker:
+    image: *worker-image
+    container_name: worker
     restart: unless-stopped
+    env_file: [".env"]
     environment:
-      DATABASE_URL: ${DATABASE_URL}
       RUST_LOG: ${RUST_LOG:-info}
+      LOG_FORMAT: json
     ports:
-      - "3100:3000"
+      - "${METRICS_HOST:-127.0.0.1}:9103:9100"
+    volumes:
+      - ./config/zayden.toml:/app/config.toml:ro
+
+  dashboard:
+    image: *dashboard-image
+    container_name: dashboard
+    restart: unless-stopped
+    env_file: [".env", "zayden.env"]
+    environment:
+      RUST_LOG: ${RUST_LOG:-info}
+      LOG_FORMAT: json
+      LEPTOS_SITE_ADDR: 0.0.0.0:3000
+    ports:
+      - "3000:3000"
+      - "${METRICS_HOST:-127.0.0.1}:9101:9101"
     volumes:
       - ./config/zayden.toml:/app/config.toml:ro
 
