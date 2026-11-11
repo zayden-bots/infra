@@ -80,7 +80,7 @@ Compose reads `DATABASE_URL` (required), `RUST_LOG` (default `info`) and `IMAGE_
 
 | Service | Image | Notes |
 |---|---|---|
-| `bot` | `ghcr.io/zayden-bots/zayden:${IMAGE_TAG:-latest}` | 1 GiB memory reservation, `palworld_uploads` volume |
+| `bot` | `ghcr.io/zayden-bots/zayden:${IMAGE_TAG:-latest}` | 1 GiB memory reservation, `palworld_uploads` volume; needs `CUSTOM_BOT_KEYS` and `CUSTOM_BOT_ACTIVE_KEY` so other bots can copy its emojis |
 | `worker` | `ghcr.io/zayden-bots/worker:${IMAGE_TAG:-latest}` | scheduled jobs and broadcasts; needs `CUSTOM_BOT_KEYS` |
 | `web` | `ghcr.io/zayden-bots/dashboard:${IMAGE_TAG:-latest}` | host port 3100 maps to container port 3000 |
 
@@ -99,6 +99,10 @@ Deploy in this order:
    ```
 
 3. LlamaBot, on its VPS. It runs the same bot binary with its own `DISCORD_TOKEN`, outside compose, and is deployed by hand. It also runs migrations on startup. Redeploy it whenever the bot binary or the migrations change.
+
+   LlamaBot copies Zayden's application emojis with Zayden's token, which the Zayden bot seals into its `applications` row at startup. LlamaBot needs the same `CUSTOM_BOT_KEYS` and `CUSTOM_BOT_ACTIVE_KEY` to read it; without them it logs a warning and keeps only its own emojis. When rotating keys, add the new key to every process first, and only then make it the active key on Zayden.
+
+A contract migration (one that drops tables, columns or functions) breaks every binary still running older code. Push its `schema` commit only after every running binary, LlamaBot included, runs code that no longer uses the dropped objects. The first bot or worker that starts afterwards applies it.
 
 Check the compose file without starting anything:
 
