@@ -117,6 +117,14 @@ The dashboard rate-limits some endpoints per client IP. Set `DASHBOARD_TRUSTED_P
 - Port 3000 is published on every interface because the tunnel host has to reach it. A direct connection from anywhere else still counts under its own address, since its `X-Forwarded-For` is ignored. It does bypass Cloudflare, though. To block that, allow only the tunnel host in the `DOCKER-USER` iptables chain (Docker's published ports skip the host's `INPUT` rules).
 - If the tunnel host's address changes, update the variable and recreate the container: `docker compose up -d dashboard`.
 
+The Deadlock app's websocket (`wss://<dashboard host>/api/deadlock/v1/ws`) uses the same tunnel and port. Nothing in this repo needs to change for it. Check these points on the Cloudflare side:
+
+- The zone's **Network → WebSockets** toggle is on.
+- The tunnel's ingress rule points at `http://<docker host>:3000` with `http2Origin` left off. cloudflared has had websocket bugs with HTTP/2 to the origin.
+- No Worker route covers the dashboard hostname. A Worker in front of a tunnel hostname can break the websocket handshake.
+
+Cloudflare closes a websocket that sends no data for a while. The dashboard pings every 30 s, which keeps the connection busy. Cloudflare and cloudflared also drop open websockets when they restart, and the app reconnects with backoff. The upgrade is refused if it carries an `Origin` header, and Cloudflare passes `Authorization` and `x-deadlock-protocol` through unchanged. Upgrades are limited per token, not per IP, so they don't depend on `DASHBOARD_TRUSTED_PROXIES`.
+
 ### LlamaBot
 
 `llamabot` is a compose service. It runs the `llama` image, which is Zayden's module list plus llamad2, with its own `llamabot.env` holding its `DISCORD_TOKEN`. It boots in the Zayden slot as a custom bot. Compose's `restart: unless-stopped` is its supervisor.
