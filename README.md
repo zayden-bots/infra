@@ -70,7 +70,7 @@ Lint tables in each root `Cargo.toml` are kept identical across repos by hand.
 
 - Required: `DATABASE_URL`, `KOFI_VERIFICATION_TOKEN`.
 - Per module: `BUNGIE_API_KEY`, `AI_PROVIDER_KEY`, `GOOGLE_API_KEY`, and `DISCORD_CLIENT_SECRET` for the dashboard.
-- Optional: log webhooks, `DASHBOARD_COOKIE_KEY`, Pelican, Patreon, YouTube, Spotify, Jellyfin and Jellyseerr keys, custom bot keys, `LOG_FORMAT` and `METRICS_BIND_ADDR`. Each is commented out in the file with its notes.
+- Optional: log webhooks, `DASHBOARD_COOKIE_KEY`, `DASHBOARD_TRUSTED_PROXIES`, Pelican, Patreon, YouTube, Spotify, Jellyfin and Jellyseerr keys, custom bot keys, `LOG_FORMAT` and `METRICS_BIND_ADDR`. Each is commented out in the file with its notes.
 
 Each bot has its own `DISCORD_TOKEN`. It lives in a per-bot env file next to `.env`, not in `.env`: `zayden.env`, `llamabot.env` and `maria.env`, each holding one line, `DISCORD_TOKEN=...`. Keep them out of git and set them to mode 600. The shared secrets stay in `.env`.
 
@@ -86,7 +86,7 @@ Compose reads `RUST_LOG` (default `info`), `IMAGE_TAG` (default `latest`), `METR
 | `llamabot` | `ghcr.io/zayden-bots/llama:${IMAGE_TAG:-latest}` | `.env`, `llamabot.env` | 9102 | Zayden's modules plus llamad2; see below |
 | `maria` | `ghcr.io/zayden-bots/maria:${IMAGE_TAG:-latest}` | `.env`, `maria.env` | 9104 | profile `maria`, off by default; AI chat only |
 | `worker` | `ghcr.io/zayden-bots/worker:${IMAGE_TAG:-latest}` | `.env` | 9103 | scheduled jobs and broadcasts; needs `CUSTOM_BOT_KEYS` |
-| `dashboard` | `ghcr.io/zayden-bots/dashboard:${IMAGE_TAG:-latest}` | `.env`, `zayden.env` | 9101 | host port 3000 maps to container port 3000; needs `CUSTOM_BOT_KEYS` and `CUSTOM_BOT_ACTIVE_KEY` to act as bots other than Zayden |
+| `dashboard` | `ghcr.io/zayden-bots/dashboard:${IMAGE_TAG:-latest}` | `.env`, `zayden.env` | 9101 | host port 3000 maps to container port 3000, reached through the tunnel (see below); needs `CUSTOM_BOT_KEYS` and `CUSTOM_BOT_ACTIVE_KEY` to act as bots other than Zayden |
 
 Every service mounts `config/zayden.toml` read-only at `/app/config.toml`. The metrics ports are published on `${METRICS_HOST:-127.0.0.1}`; set `METRICS_HOST` in `.env` to the interface your Prometheus scrapes. `zayden` and `llamabot` can also mount `config/radio.toml` at `/app/radio.toml`; that mount is commented out in the compose file until you create the file.
 
@@ -105,6 +105,17 @@ Deploy in this order:
    ```sh
    docker compose pull dashboard && docker compose up -d dashboard
    ```
+
+### Dashboard behind the tunnel
+
+Public traffic reaches the dashboard through a Cloudflare Tunnel. `cloudflared` runs on a separate host and connects to the Docker host's port 3000 over the LAN. Docker keeps the source address of that connection, so the dashboard sees the tunnel host as the peer.
+
+The dashboard rate-limits some endpoints per client IP. Set `DASHBOARD_TRUSTED_PROXIES` in `.env` to the tunnel host's exact address, for example `DASHBOARD_TRUSTED_PROXIES="192.0.2.10"`. The dashboard then takes the client IP from `X-Forwarded-For`. It reads the header right to left and stops at the first address it doesn't trust. The value is a comma-separated list of IPs or CIDRs, and an invalid entry stops the dashboard at startup.
+
+- Unset, the peer counts as the client, so every visitor shares one rate-limit bucket.
+- Trust only the tunnel host's exact address, never a LAN or Docker bridge subnet. Any host you trust can claim any client IP.
+- Port 3000 is published on every interface because the tunnel host has to reach it. A direct connection from anywhere else still counts under its own address, since its `X-Forwarded-For` is ignored. It does bypass Cloudflare, though. To block that, allow only the tunnel host in the `DOCKER-USER` iptables chain (Docker's published ports skip the host's `INPUT` rules).
+- If the tunnel host's address changes, update the variable and recreate the container: `docker compose up -d dashboard`.
 
 ### LlamaBot
 
